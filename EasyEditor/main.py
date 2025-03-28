@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QListWidget, QTextEdit, QLineEdit, QInputDialog, QFileDialog
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QListWidget, QFileDialog, QMessageBox
 from PyQt5.QtGui import QPixmap
 from PIL import Image
 from PIL import ImageFilter
@@ -51,6 +51,7 @@ def chooseWorkdir():
     global workdir
     workdir = QFileDialog.getExistingDirectory()
 
+
 def filter(filenames, extensions):
     result = []
     for file in filenames:
@@ -62,10 +63,15 @@ def filter(filenames, extensions):
 def showFilenameList():
     extensions = ["jpg", "jpeg", "png", "gif", "bmp"]
     chooseWorkdir()
-    filenames = filter(os.listdir(workdir), extensions)
-    w_list.clear()
-    for file in filenames:
-        w_list.addItem(file)
+    try:
+        filenames = filter(os.listdir(workdir), extensions)
+        w_list.clear()
+        for file in filenames:
+            w_list.addItem(file)
+    except FileNotFoundError:
+        box = QMessageBox()
+        box.setText("Папка не вибрана")
+        box.exec_()
 
 class ImageProcessor():
     def __init__(self):
@@ -78,6 +84,7 @@ class ImageProcessor():
         self.filename = filename 
         image_path = os.path.join(workdir, filename)
         self.image = Image.open(image_path)
+
 
     def do_flip(self):
         self.image = self.image.transpose(Image.FLIP_LEFT_RIGHT)
@@ -108,6 +115,7 @@ class ImageProcessor():
         self.saveImage()
         image_path = os.path.join(workdir, self.savedir, self.filename)
         self.showImage(image_path)
+
     
     def saveImage(self):
         path = os.path.join(workdir, self.savedir)
@@ -137,11 +145,13 @@ def showChosenImage():
 
 
 w_list.currentRowChanged.connect(showChosenImage)
+
 left_btn.clicked.connect(workimage.do_left)
 right_btn.clicked.connect(workimage.do_right)
 blure_btn.clicked.connect(workimage.do_sharpen)
 mirror_btn.clicked.connect(workimage.do_flip)
 colour_btn.clicked.connect(workimage.do_bw)
+
 folder_btn.clicked.connect(showFilenameList)
 
 
